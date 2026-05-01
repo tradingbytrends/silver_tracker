@@ -1,0 +1,123 @@
+  Architecture Overview                                     
+                                                            
+  silver_tracker/                                           
+  ├── config/settings.py          ← All env-var config in   
+  one place                                               
+  ├── src/
+  │   ├── ingestion/
+  │   │   ├── angel_one_client.py  ← SmartAPI wrapper
+  (login, candles, LTP)
+  │   │   └── historical_fetcher.py← 7-day backfill +
+  latest-candle fetch
+  │   ├── processing/
+  │   │   └── price_processor.py   ← Derives change %, 1H/1D
+   range, formats msg
+  │   ├── storage/
+  │   │   └── database.py          ← SQLAlchemy + SQLite
+  (MinutePrice, NotificationLog)
+  │   └── notifications/
+  │       └── whatsapp_notifier.py ← Twilio WhatsApp send +
+  logs to DB
+  ├── main.py                      ← Orchestrator +
+  APScheduler
+  ├── requirements.txt
+  └── .env.example
+
+
+
+ How to Run
+
+  1. Install dependencies
+  pip install -r requirements.txt
+
+  2. Set up credentials
+  cp .env.example .env
+  # Edit .env with your Angel One API key, TOTP secret, and
+  Twilio credentials
+
+  3. Run
+  python main.py
+
+  What happens at startup
+
+  1. Validates all required env vars — fails fast with a
+  clear error if missing
+  2. Logs into Angel One SmartAPI (with TOTP 2FA)
+  3. Backfills the last 7 days of silver minute candles into
+   SQLite
+  4. Starts two scheduled jobs:
+    - price_job — every 60 seconds, fetches the latest 1-min
+   candle and upserts it
+    - notify_job — every 15–20 minutes (randomized each
+  interval), builds a summary and sends WhatsApp
+
+  WhatsApp message format
+
+  *Silver Price Update*
+  Price: ₹87,450.00
+  Time : 2026-04-21 14:35 IST
+  Change: ▲ ₹120.00 (+0.14%)
+  1H Range: ₹87,200.00 – ₹87,600.00
+  Day Range: ₹86,900.00 – ₹87,800.00
+
+  To get your Angel One SILVER token
+
+  Check SILVER_TOKEN in .env.example — it's pre-set to
+  234230 (MCX Silver). Verify it on the
+  https://margincalculator.angelbroking.com/OpenAPI_File/fil
+  es/OpenAPIScripMaster.json if needed.
+
+
+
+
+
+
+
+Design and implement a scalable Python-based system using the Angel One SmartAPI Historical endpoint (https://smartapi.angelone.in/docs/Historical) with the following requirements:
+
+Fetch and store 1 week of historical silver price data
+Capture and maintain minute-level data, including the latest price (last traded price per minute)
+Continuously update and track real-time price changes
+Send automated price notifications via WhatsApp every 15–20 minutes The solution should follow a clean, modular architecture suitable for long-term development and scalability. Include proper separation of concerns (data ingestion, processing, storage, and notification services), and ensure the design is maintainable and extensible from the initial stage.
+
+
+
+
+
+
+
+I have this above logic file (Pine Script), and I want to implement only the core calculation part in this project.
+
+My requirement is:
+
+I only need to calculate:
+ma1_highbars
+ma1_lowbars
+ma2_highbars
+ma2_lowbars
+and similarly for other lengths (ma3, ma4, etc.)
+I do NOT need any plotting-related logic such as:
+plot()
+fill()
+color conditions
+visibility logic
+
+Example of code to ignore:
+
+ma1_top_visible = ma1_top_high > low
+ma1_bot_visible = ma1_bot_low < high
+ma1_top_color = ...
+plot(...)
+fill(...)
+
+These parts are only for graph visualization and are not required in my Python implementation.
+
+My focus is only on extracting the logic behind:
+
+highestbars(length)
+lowestbars(length)
+
+and converting it into Python to compute the respective highbars and lowbars values.
+
+Goal:
+Implement a clean Python function/module that returns highbars and lowbars values for given input data (high, low, close, volume, etc.) and lengths.
