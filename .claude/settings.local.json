@@ -5,7 +5,8 @@
       "Bash(python main.py)",
       "Bash(python -c ' *)",
       "Bash(python *)",
-      "Bash(py --list)"
+      "Bash(py --list)",
+      "Bash(git add *)"
     ]
   }
 }

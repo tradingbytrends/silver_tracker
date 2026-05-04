@@ -118,15 +118,16 @@ def main() -> None:
 
     from SmartApi import SmartConnect
 
-    now_ist = datetime.now(IST)
-    from_dt = now_ist - timedelta(minutes=15)
+    today = datetime.now(IST).date()
+    from_dt = IST.localize(datetime(today.year, today.month, today.day, 4, 0))
+    to_dt   = IST.localize(datetime(today.year, today.month, today.day, 4, 30))
 
     params = {
         "exchange":    settings.SILVER_EXCHANGE,
         "symboltoken": settings.SILVER_TOKEN,
-        "interval":    "ONE_MINUTE",
+        "interval":    "THIRTY_MINUTE",
         "fromdate":    from_dt.strftime(DATE_FMT),
-        "todate":      now_ist.strftime(DATE_FMT),
+        "todate":      to_dt.strftime(DATE_FMT),
     }
 
     print(f"\nConnecting to Angel One …  (client: {settings.ANGEL_CLIENT_CODE})")
